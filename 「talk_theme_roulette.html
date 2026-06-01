@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>今日のトークテーマ</title>
+
+<style>
+body{
+    font-family: sans-serif;
+    text-align:center;
+    background:#f5f5f5;
+    margin:20px;
+}
+
+h1{
+    margin-bottom:10px;
+}
+
+#wheel-container{
+    position:relative;
+    width:500px;
+    margin:auto;
+}
+
+#pointer{
+    width:0;
+    height:0;
+    border-left:18px solid transparent;
+    border-right:18px solid transparent;
+    border-top:40px solid red;
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:10;
+}
+
+canvas{
+    background:white;
+    border-radius:50%;
+}
+
+.controls{
+    margin-top:20px;
+}
+
+button{
+    padding:10px 20px;
+    font-size:18px;
+    margin:5px;
+    cursor:pointer;
+}
+
+textarea{
+    width:500px;
+    height:120px;
+    margin-top:20px;
+    font-size:16px;
+}
+
+#result{
+    margin-top:20px;
+    font-size:28px;
+    font-weight:bold;
+    color:#d35400;
+}
+</style>
+</head>
+
+<body>
+
+<h1>今日のトークテーマ</h1>
+
+<div id="wheel-container">
+    <div id="pointer"></div>
+    <canvas id="wheel" width="500" height="500"></canvas>
+</div>
+
+<div class="controls">
+    <button onclick="startWheel()">スタート</button>
+    <button onclick="stopWheel()">ストップ</button>
+</div>
+
+<p>テーマを1行ずつ入力（6個推奨）</p>
+
+<textarea id="topics">
+最近うれしかったこと
+好きな食べ物
+行ってみたい場所
+休日の過ごし方
+好きな教科
+将来やってみたいこと
+</textarea>
+
+<br>
+<button onclick="updateTopics()">テーマ更新</button>
+
+<div id="result"></div>
+
+<script>
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+
+let topics = [
+"最近うれしかったこと",
+"好きな食べ物",
+"行ってみたい場所",
+"休日の過ごし方",
+"好きな教科",
+"将来やってみたいこと"
+];
+
+let angle = 0;
+let spinning = false;
+let speed = 0;
+
+const colors = [
+"#FFD966",
+"#9FC5E8",
+"#B6D7A8",
+"#F4CCCC",
+"#D9D2E9",
+"#FCE5CD"
+];
+
+function drawWheel(){
+
+    const num = topics.length;
+    const arc = 2 * Math.PI / num;
+
+    ctx.clearRect(0,0,500,500);
+
+    for(let i=0;i<num;i++){
+
+        const start = angle + i * arc;
+        const end = start + arc;
+
+        ctx.beginPath();
+        ctx.moveTo(250,250);
+        ctx.arc(250,250,220,start,end);
+        ctx.closePath();
+
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "black";
+        ctx.stroke();
+
+        ctx.save();
+
+        ctx.translate(250,250);
+        ctx.rotate(start + arc/2);
+
+        ctx.fillStyle="black";
+        ctx.font="16px sans-serif";
+        ctx.textAlign="right";
+
+        ctx.fillText(topics[i],190,5);
+
+        ctx.restore();
+    }
+}
+
+function animate(){
+    if(spinning){
+        angle += speed;
+        drawWheel();
+        requestAnimationFrame(animate);
+    }
+}
+
+function startWheel(){
+    if(!spinning){
+        spinning = true;
+        speed = 0.15 + Math.random()*0.1;
+        animate();
+    }
+}
+
+function stopWheel(){
+
+    spinning = false;
+
+    const num = topics.length;
+    const arc = 2 * Math.PI / num;
+
+    let pointerAngle = (Math.PI * 1.5 - angle) % (Math.PI*2);
+
+    if(pointerAngle < 0){
+        pointerAngle += Math.PI*2;
+    }
+
+    let index = Math.floor(pointerAngle / arc);
+    index = (num - index) % num;
+
+    document.getElementById("result").innerHTML =
+        "今日のテーマ：<br>" + topics[index];
+}
+
+function updateTopics(){
+
+    const input = document
+        .getElementById("topics")
+        .value
+        .split("\n")
+        .filter(t => t.trim() !== "");
+
+    if(input.length >= 2){
+        topics = input;
+        drawWheel();
+    }
+}
+
+drawWheel();
+</script>
+
+</body>
+</html>
